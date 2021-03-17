@@ -2,6 +2,8 @@ package it.polito.tdp.IndovinaNumero;
 
 import javafx.application.Application;
 import static javafx.application.Application.launch;
+
+import it.polito.tdp.IndovinaNumero.model.Model;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,17 +14,29 @@ public class EntryPoint extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/Scene.fxml"));
+    	Model model = new Model();
+    	FXMLController controller;
+    	FXMLLoader loader= new FXMLLoader(getClass().getResource("/fxml/Scene.fxml"));
+    	
+        Parent root = loader.load();
         
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
+       
+        controller = loader.getController();
+        controller.setModel(model);
         
         stage.setTitle("JavaFX and Maven");
         stage.setScene(scene);
         stage.show();
     }
 
-    /**
+    private Object GetResource(String string) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
      * The main() method is ignored in correctly deployed JavaFX application.
      * main() serves only as fallback in case the application can not be
      * launched through deployment artifacts, e.g., in IDEs with limited FX

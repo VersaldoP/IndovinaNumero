@@ -5,7 +5,10 @@
 package it.polito.tdp.IndovinaNumero;
 
 import java.net.URL;
+import java.security.InvalidParameterException;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.IndovinaNumero.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -14,12 +17,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 
 public class FXMLController {
+	private Model model;
 
-	private final int NMAX = 100;
-	private final int TMAX = 8;
-	private int segreto;
-	private int tentativiFatti;
-	private boolean inGioco = false;
+	
 	
 	
     @FXML // ResourceBundle that was given to the FXMLLoader
@@ -48,19 +48,19 @@ public class FXMLController {
 
     @FXML
     void doNuovaPartita(ActionEvent event) {
-    	//gestione inizio nuova partita
-    	this.segreto = (int) (Math.random() * NMAX) +1;
-    	this.tentativiFatti = 0;
-    	this.inGioco = true;
+//    	this.model = new Model();
+    	this.model.nuovaPartita();
     	
     	//gestione dell'interfaccia
-    	this.txtTentativi.setText(Integer.toString(TMAX));
+    	this.txtTentativi.setText(Integer.toString(this.model.getTMAX()));
     	this.layoutTentativo.setDisable(false);
+    	this.txtRisultato.setText("");
     }
 
     @FXML
     void doTentativo(ActionEvent event) {
     	//lettura input dell'utente
+    	
     	String ts = txtTentativoUtente.getText();
     	
     	int tentativo;
@@ -68,36 +68,58 @@ public class FXMLController {
     		tentativo = Integer.parseInt(ts);
     	}catch(NumberFormatException e) {
     		txtRisultato.setText("Devi inserire un numero!");
+    		txtTentativi.setText("0");
+    		this.layoutTentativo.setDisable(false);
+    		
     		return;
     	}
 
     	this.txtTentativoUtente.setText("");
     	
-    	this.tentativiFatti ++;
-    	this.txtTentativi.setText(Integer.toString(TMAX-this.tentativiFatti));
     	
-    	if(tentativo == this.segreto) {
+    	
+    	int result ;
+    	try {
+    	 result = this.model.tentativo(tentativo);
+    	}
+    	catch(IllegalStateException e) {
+    		txtRisultato.setText("La partita non è in corso ");
+    		this.layoutTentativo.setDisable(false);
+    		return;
+    		
+    	}
+    	catch(InvalidParameterException e) {
+    		
+    		txtRisultato.setText("La partita non è ancora in corso O hai inserito un numero già inserito");
+    		return;
+    	}
+    	this.txtTentativi.setText(Integer.toString(this.model.getTMAX()-this.model.getTentativiFatti()));
+    	
+    	if(result==0) {
     		//HO INDOVINATO!
-    		txtRisultato.setText("HAI VINTO CON " + this.tentativiFatti + "TENTATIVI");
-    		this.inGioco = false;
+    		txtRisultato.setText("HAI VINTO CON " + this.model.getTentativiFatti() + "TENTATIVI");
+//    		this.inGioco = false;
     		this.layoutTentativo.setDisable(true);
     		return;
     	}
+    	else {
+    		if(this.model.getTentativiFatti()==this.model.getTMAX()) {
+        		txtRisultato.setText("Hai esaurito i tentativi");
+        		this.txtTentativi.setText(Integer.toString(this.model.getTMAX()-this.model.getTentativiFatti()));
+        		this.layoutTentativo.setDisable(true);
+        		return;
+    		}
     	
-    	if(this.tentativiFatti == TMAX) {
-    		//ho esaurito i tentativi
-    		txtRisultato.setText("HAI PERSO. IL SEGRETO ERA: " + this.segreto);
-    		this.inGioco = false;
-    		this.layoutTentativo.setDisable(true);
-    		return;
-    	}
+    	
     	
     	//Non ho vinto -> devo informare l'utente circa la bontà del suo tentativo
-    	if(tentativo < this.segreto) {
+    	if(result <0) {
     		txtRisultato.setText("TENTATIVO TROPPO BASSO");
     	} else {
     		txtRisultato.setText("TENTATIVO TROPPO ALTO");
     	}
+    	}
+    	
     	
     }
 
@@ -109,5 +131,8 @@ public class FXMLController {
         assert btnProva != null : "fx:id=\"btnProva\" was not injected: check your FXML file 'Scene.fxml'.";
         assert txtRisultato != null : "fx:id=\"txtRisultato\" was not injected: check your FXML file 'Scene.fxml'.";
 
+    }
+    public void setModel(Model model) {
+    	this.model = model;
     }
 }
